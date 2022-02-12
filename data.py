@@ -1,6 +1,9 @@
 from models import session, User, Post
-from datetime import datetime
-from sqlalchemy import func
+
+
+def post_delete(post_id):
+    session.query(Post).filter(Post.id == post_id).delete()
+    session.commit()
 
 
 def find_user(user_id):
@@ -29,7 +32,8 @@ def get_users_posts(user_id):
             sample = {'id': post.id,
                       'text': post.text,
                       'creator': post.creator,
-                      'created data': time.strftime("%m/%d/%Y, %H:%M:%S")
+                      'created data': time.strftime("%m/%d/%Y, %H:%M:%S"),
+                      'liked by': post.liked
                       }
             posts_list.append(sample)
     return posts_list
@@ -42,7 +46,8 @@ def get_all_posts():
         sample = {'id': post.id,
                   'text': post.text,
                   'creator': post.creator.nickname,
-                  'created data': post.time_created
+                  'created data': post.time_created,
+                  'liked by': post.liked
                   }
         posts_list.append(sample)
     return posts_list
@@ -54,7 +59,8 @@ def add_new_user(nick):
     session.commit()
     sample = {'id': user.id,
               'nick': user.nickname,
-              'posts': len(user.posts)
+              'posts': len(user.posts),
+              'likes': user.likes
               }
     return sample
 
@@ -68,7 +74,8 @@ def get_all_users():
         for user in users:
             sample = {'id': user.id,
                       'nick': user.nickname,
-                      'posts': len(user.posts)
+                      'posts': len(user.posts),
+                      'likes': user.likes
                       }
             user_list.append(sample)
     return user_list

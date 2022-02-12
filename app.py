@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
-from data import get_all_users, add_new_user, get_all_posts, get_users_posts, find_user, add_new_post
+from data import get_all_users, add_new_user, get_all_posts, get_users_posts, find_user, add_new_post, post_delete
 
 
 app = Flask(__name__)
@@ -28,6 +28,10 @@ class UsersPosts(Resource):
             args = parser_new_post.parse_args()
             return add_new_post(user, args['text'])
 
+    def delete(self, user_id, post_id):
+        post_delete(post_id)
+        return '', 204
+
 
 class Users(Resource):
     def get(self):
@@ -46,7 +50,8 @@ class Posts(Resource):
     def get(self):
         return get_all_posts()
 
-api.add_resource(UsersPosts, '/users/<user_id>/posts')
+
+api.add_resource(UsersPosts, '/users/<user_id>/posts', '/users/<user_id>/posts/<post_id>')
 api.add_resource(Users, '/users')
 
 
