@@ -23,7 +23,7 @@ class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     nickname = Column(String(24), nullable=False)
-    posts = relationship('Post', backref='user_', lazy=True)
+    posts = relationship('Post', backref='user', lazy=True)
     likes = relationship(
         'Post', secondary=association,
         back_populates='liked', lazy=True,
@@ -39,7 +39,7 @@ class Post(Base):
     __tablename__ = 'posts'
     id = Column(Integer, primary_key=True)
     text = Column(String(250), nullable=False)
-    creator = Column((ForeignKey("users.id")))
+    creator = Column(ForeignKey("users.id"), nullable=False)
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     liked = relationship(
         'User', secondary=association,

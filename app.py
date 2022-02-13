@@ -1,6 +1,8 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
-from data import get_all_users, add_new_user, get_all_posts, get_users_posts, find_user, add_new_post, post_delete
+from datetime import date, datetime
+from data import get_all_users, add_new_user, get_all_posts, get_users_posts, find_user, add_new_post, post_delete,\
+    get_posts_filter_by_date
 
 
 app = Flask(__name__)
@@ -10,6 +12,10 @@ parser_new_user.add_argument('nick', type=str)
 
 parser_new_post = reqparse.RequestParser()
 parser_new_post.add_argument('text', type=str)
+
+parser_dates = reqparse.RequestParser()
+parser_dates.add_argument('date_from', type=str)
+parser_dates.add_argument('date_to', type=str)
 
 
 class UsersPosts(Resource):
@@ -48,11 +54,17 @@ class Users(Resource):
 
 class Posts(Resource):
     def get(self):
-        return get_all_posts()
+        args = parser_dates.parse_args()
+        if args['date_from'] and args['date_to'] is not None:
+            return get_posts_filter_by_date(datetime.strptime(args['date_from'], '%Y-%m-%d'),
+                                            datetime.strptime(args['date_to'], '%Y-%m-%d'))
+        else:
+            return get_all_posts()
 
 
 api.add_resource(UsersPosts, '/users/<user_id>/posts', '/users/<user_id>/posts/<post_id>')
 api.add_resource(Users, '/users')
+api.add_resource(Posts, '/posts')
 
 
 if __name__ == '__main__':

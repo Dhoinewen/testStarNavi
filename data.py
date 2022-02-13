@@ -1,6 +1,21 @@
 from models import session, User, Post
 
 
+def get_posts_filter_by_date(date_from, date_to):
+    posts_list = []
+    posts = session.query(Post).filter(Post.time_created.between(date_from, date_to)).all()
+    for post in posts:
+        time = post.time_created
+        sample = {'id': post.id,
+                  'text': post.text,
+                  'creator': post.creator,
+                  'created data': time.strftime("%d/%m/%Y, %H:%M:%S"),
+                  'liked by': post.liked
+                  }
+        posts_list.append(sample)
+    return posts_list
+
+
 def post_delete(post_id):
     session.query(Post).filter(Post.id == post_id).delete()
     session.commit()
@@ -15,9 +30,8 @@ def find_user(user_id):
 
 
 def add_new_post(user, text):
-    post = Post(text=text)
+    post = Post(text=text, creator=user.id)
     session.add(post)
-    user.posts.append(post)
     session.commit()
 
 
@@ -32,7 +46,7 @@ def get_users_posts(user_id):
             sample = {'id': post.id,
                       'text': post.text,
                       'creator': post.creator,
-                      'created data': time.strftime("%m/%d/%Y, %H:%M:%S"),
+                      'created data': time.strftime("%d/%m/%Y, %H:%M:%S"),
                       'liked by': post.liked
                       }
             posts_list.append(sample)
@@ -43,10 +57,11 @@ def get_all_posts():
     posts_list = []
     posts = session.query(Post).all()
     for post in posts:
+        time = post.time_created
         sample = {'id': post.id,
                   'text': post.text,
-                  'creator': post.creator.nickname,
-                  'created data': post.time_created,
+                  'creator': post.creator,
+                  'created data': time.strftime("%d/%m/%Y, %H:%M:%S"),
                   'liked by': post.liked
                   }
         posts_list.append(sample)
