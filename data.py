@@ -68,8 +68,8 @@ def get_all_posts():
     return posts_list
 
 
-def add_new_user(nick):
-    user = User(nickname=nick)
+def add_new_user(nick, password):
+    user = User(nickname=nick, password=password)
     session.add(user)
     session.commit()
     sample = {'id': user.id,

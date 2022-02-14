@@ -1,3 +1,4 @@
+from hmac import compare_digest
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, Table
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -24,12 +25,16 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     nickname = Column(String(24), nullable=False)
     posts = relationship('Post', backref='user', lazy=True)
+    password = Column(String(24), nullable=False)
     likes = relationship(
         'Post', secondary=association,
         back_populates='liked', lazy=True,
         cascade="all, delete",
         passive_deletes=True
     )
+
+    def check_password(self, password):
+        return compare_digest(password, self.password)
 
     def __repr__(self):
         return f'{self.nickname}'
