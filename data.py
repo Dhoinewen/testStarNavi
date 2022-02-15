@@ -1,4 +1,15 @@
-from models import session, User, Post
+from models import session, User, Post, Like
+
+
+def like_post(user, post_id):
+    like = Like(liked_by=user.id, liked_post=post_id)
+    session.add(like)
+    session.commit()
+
+
+def unlike_post(user, post_id):
+    session.query(Like).filter(Like.liked_by == user.id or Like.liked_post == post_id).delete()
+    session.commit()
 
 
 def get_posts_filter_by_date(date_from, date_to):
@@ -10,7 +21,7 @@ def get_posts_filter_by_date(date_from, date_to):
                   'text': post.text,
                   'creator': post.creator,
                   'created data': time.strftime("%d/%m/%Y, %H:%M:%S"),
-                  'liked by': post.liked
+                  'liked by': f'{post.liked}'
                   }
         posts_list.append(sample)
     return posts_list
@@ -35,9 +46,8 @@ def add_new_post(user, text):
     session.commit()
 
 
-def get_users_posts(user_id):
+def get_users_posts(user):
     posts_list = []
-    user = session.query(User).filter(User.id == user_id).first()
     if user is None:
         return None
     else:
@@ -47,7 +57,7 @@ def get_users_posts(user_id):
                       'text': post.text,
                       'creator': post.creator,
                       'created data': time.strftime("%d/%m/%Y, %H:%M:%S"),
-                      'liked by': post.liked
+                      'liked by': f'{post.liked}'
                       }
             posts_list.append(sample)
     return posts_list
@@ -62,7 +72,7 @@ def get_all_posts():
                   'text': post.text,
                   'creator': post.creator,
                   'created data': time.strftime("%d/%m/%Y, %H:%M:%S"),
-                  'liked by': post.liked
+                  'liked by': f'{post.liked}'
                   }
         posts_list.append(sample)
     return posts_list
@@ -75,7 +85,7 @@ def add_new_user(nick, password):
     sample = {'id': user.id,
               'nick': user.nickname,
               'posts': len(user.posts),
-              'likes': user.likes
+              'likes': f'{user.likes}'
               }
     return sample
 
@@ -90,7 +100,7 @@ def get_all_users():
             sample = {'id': user.id,
                       'nick': user.nickname,
                       'posts': len(user.posts),
-                      'likes': user.likes
+                      'likes': f'{user.likes}'
                       }
             user_list.append(sample)
     return user_list

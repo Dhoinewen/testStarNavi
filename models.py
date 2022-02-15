@@ -12,26 +12,13 @@ session = Session(bind=conn)
 Base = declarative_base()
 
 
-association = Table(
-    'association',
-    Base.metadata,
-    Column('user_id', Integer, ForeignKey('posts.id', ondelete='CASCADE')),
-    Column('post_id', Integer, ForeignKey('users.id', ondelete='CASCADE'))
-    )
-
-
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     nickname = Column(String(24), nullable=False)
     posts = relationship('Post', backref='user', lazy=True)
     password = Column(String(24), nullable=False)
-    likes = relationship(
-        'Post', secondary=association,
-        back_populates='liked', lazy=True,
-        cascade="all, delete",
-        passive_deletes=True
-    )
+    likes = relationship('Like', backref='user', lazy=True)
 
     def check_password(self, password):
         return compare_digest(password, self.password)
@@ -46,14 +33,21 @@ class Post(Base):
     text = Column(String(250), nullable=False)
     creator = Column(ForeignKey("users.id"), nullable=False)
     time_created = Column(DateTime(timezone=True), server_default=func.now())
-    liked = relationship(
-        'User', secondary=association,
-        back_populates='likes', lazy=True
-    )
-
+    liked = relationship('Like', backref='post', lazy=True)
 
     def __repr__(self):
         return f'{self.text}'
+
+    
+class Like(Base):
+    __tablename__ = 'likes'
+    id = Column(Integer, primary_key=True)
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    liked_by = Column(ForeignKey('users.id'), nullable=False)
+    liked_post = Column(ForeignKey('posts.id'), nullable=False)
+
+    def __repr__(self):
+        return f'by{self.liked_by}'
 
 
 Base.metadata.create_all(bind=conn)

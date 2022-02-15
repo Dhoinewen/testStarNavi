@@ -3,7 +3,7 @@ from models import session, User, Post
 from flask_restful import Api, Resource, reqparse
 from datetime import datetime
 from data import get_all_users, add_new_user, get_all_posts, get_users_posts, find_user, add_new_post, post_delete,\
-    get_posts_filter_by_date
+    get_posts_filter_by_date, like_post, unlike_post
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager, current_user
 
 
@@ -19,6 +19,11 @@ parser_new_user.add_argument('password', type=str)
 parser_new_post = reqparse.RequestParser()
 parser_new_post.add_argument('text', type=str)
 
+parser_like_post = reqparse.RequestParser()
+parser_new_post.add_argument('like', type=bool)
+parser_new_post.add_argument('unlike', type=bool)
+parser_new_post.add_argument('post_id', type=int)
+
 parser_dates = reqparse.RequestParser()
 parser_dates.add_argument('date_from', type=str)
 parser_dates.add_argument('date_to', type=str)
@@ -26,21 +31,17 @@ parser_dates.add_argument('date_to', type=str)
 
 class UsersPosts(Resource):
     @jwt_required()
-    def get(self, user_id):
-        posts = get_users_posts(user_id)
+    def get(self):
+        posts = get_users_posts(current_user)
         if posts is None:
             return '', 404
         else:
             return posts
 
     @jwt_required()
-    def post(self, user_id):
-        user = find_user(user_id)
-        if user is None:
-            return '', 404
-        else:
-            args = parser_new_post.parse_args()
-            return add_new_post(user, args['text'])
+    def post(self):
+        args = parser_new_post.parse_args()
+        return add_new_post(current_user, args['text'])
 
     @jwt_required()
     def delete(self, user_id, post_id):
@@ -58,6 +59,7 @@ class Users(Resource):
 
 
 class Posts(Resource):
+    @jwt_required()
     def get(self):
         args = parser_dates.parse_args()
         if args['date_from'] and args['date_to'] is not None:
@@ -65,6 +67,18 @@ class Posts(Resource):
                                             datetime.strptime(args['date_to'], '%Y-%m-%d'))
         else:
             return get_all_posts()
+
+    @jwt_required()
+    def put(self, post_id):
+        args = parser_new_post.parse_args()
+        if args['like'] is True:
+            like_post(current_user, post_id)
+            return '', 200
+        elif args['unlike'] is True:
+            unlike_post(current_user, post_id)
+            return '', 204
+        else:
+            return '', 404
 
 
 @jwt.user_identity_loader
@@ -95,9 +109,9 @@ class Register(Resource):
         return add_new_user(args['nick'], args['password'])
 
 
-api.add_resource(UsersPosts, '/users/<user_id>/posts', '/users/<user_id>/posts/<post_id>')
+api.add_resource(UsersPosts, '/user/posts', '/user/posts/<post_id>')
 api.add_resource(Users, '/users')
-api.add_resource(Posts, '/posts')
+api.add_resource(Posts, '/posts', '/posts/<post_id>')
 api.add_resource(Login, '/login')
 api.add_resource(Register, '/register')
 
