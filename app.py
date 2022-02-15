@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify
-from models import session, User, Post
+from models import session, User
 from flask_restful import Api, Resource, reqparse
 from datetime import datetime
-from data import get_all_users, add_new_user, get_all_posts, get_users_posts, find_user, add_new_post, post_delete,\
-    get_posts_filter_by_date, like_post, unlike_post
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager, current_user
+from data import get_all_users, add_new_user, get_all_posts, get_users_posts, add_new_post, post_delete,\
+    get_posts_filter_by_date, like_post, unlike_post, get_likes_filter_by_date, get_all_likes
+from flask_jwt_extended import create_access_token, jwt_required, JWTManager, current_user
 
 
 app = Flask(__name__)
@@ -28,6 +28,16 @@ parser_dates = reqparse.RequestParser()
 parser_dates.add_argument('date_from', type=str)
 parser_dates.add_argument('date_to', type=str)
 
+
+class Likes(Resource):
+    @jwt_required()
+    def get(self):
+        args = parser_dates.parse_args()
+        if args['date_from'] and args['date_to'] is not None:
+            return get_likes_filter_by_date(datetime.strptime(args['date_from'], '%Y-%m-%d'),
+                                            datetime.strptime(args['date_to'], '%Y-%m-%d'))
+        else:
+            return get_all_likes()
 
 class UsersPosts(Resource):
     @jwt_required()
@@ -114,6 +124,7 @@ api.add_resource(Users, '/users')
 api.add_resource(Posts, '/posts', '/posts/<post_id>')
 api.add_resource(Login, '/login')
 api.add_resource(Register, '/register')
+api.add_resource(Likes, '/likes')
 
 
 if __name__ == '__main__':

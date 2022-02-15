@@ -1,6 +1,34 @@
 from models import session, User, Post, Like
 
 
+def get_likes_filter_by_date(date_from, date_to):
+    likes_list = []
+    likes = session.query(Like).filter(Like.time_created.between(date_from, date_to)).all()
+    for like in likes:
+        time = like.time_created
+        sample = {'id': like.id,
+                  'liked_by': like.liked_by,
+                  'liked_post': like.liked_post,
+                  'created data': time.strftime("%d/%m/%Y, %H:%M:%S"),
+                  }
+        likes_list.append(sample)
+    return likes_list
+
+
+def get_all_likes():
+    likes_list = []
+    likes = session.query(Like).all()
+    for like in likes:
+        time = like.time_created
+        sample = {'id': like.id,
+                  'liked_by': like.liked_by,
+                  'liked_post': like.liked_post,
+                  'created data': time.strftime("%d/%m/%Y, %H:%M:%S"),
+
+                  }
+        likes_list.append(sample)
+    return likes_list
+
 def like_post(user, post_id):
     like = Like(liked_by=user.id, liked_post=post_id)
     session.add(like)
